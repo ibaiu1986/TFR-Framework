@@ -1,5 +1,10 @@
 # TFR Framework
-Dynamic operations framework for Arma Reforger focused on mission makers. It features intel chains, dynamic objectives, HALO insertion, persistence, enemy communications, civilian interaction, rewards, and admin tools. Designed for coordinated units, dedicated servers, and immersive scenarios, TFR Operations aims to provide configurable systems for building replayable missions across custom maps.
+
+# TFR Framework
+
+TFR Framework is a modular framework for Arma Reforger designed to provide reusable gameplay, operations, persistence, interaction, placement and utility systems for communities, servers and future TFR addons.
+
+It is intended as a shared foundation for TFR projects, with a focus on clean configuration, modular systems, dedicated server stability and long-term expandability.
 
 License
 This project is licensed for non-commercial use only.
