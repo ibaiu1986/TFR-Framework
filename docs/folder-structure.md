@@ -1,57 +1,65 @@
 # TFR Framework Folder Structure
 
-This document defines the target script folder structure for TFR Framework.
+This document defines the official script folder structure for TFR Framework.
 
 TFR Framework and TFR Operations are the same addon.
-**TFR Operations** is the internal Workbench project name.
-**TFR Framework** is the public Workshop / repository name.
 
-The goal of this structure is to make the addon easier to understand, easier to maintain and harder to break.
+* **TFR Operations** is the internal Workbench project name.
+* **TFR Framework** is the public Workshop / repository name.
 
----
-
-## Important rule
-
-Do not move scripts randomly.
-
-Moving scripts in Arma Reforger Workbench can break references, prefabs or dependencies if done too quickly.
-
-The correct process is:
-
-1. Document the target structure.
-2. Compare it with the current real folders.
-3. Move one block at a time.
-4. Compile after each block.
-5. Test in Workbench after each block.
-6. Do not refactor logic while moving files.
-
-Folder cleanup and code refactor must be separate steps.
+The goal of this document is to keep the addon structure clear, stable and easy to understand without moving scripts unnecessarily.
 
 ---
 
-## Target script structure
+## Official script structure
 
-Recommended target structure:
+The current script structure is accepted as the official structure for now.
 
 ```text
 scripts/Game/TFR/
 ├─ Actions/
-├─ Admin/
 ├─ Components/
-├─ Core/
-├─ HALO/
 ├─ Missions/
-├─ Persistence/
 ├─ Radial/
-├─ Spawn/
-└─ Utilities/
+└─ Spawn/
 ```
+
+This structure is simple, clear and already separates the main systems of the addon.
+
+No additional folders should be created unless there is a real need later.
+
+The priority is not to create more folders.
+The priority is to keep the addon easy to configure, easy to debug and safe for dedicated servers.
 
 ---
 
-## Actions
+## Folder rule
 
-Target folder:
+Do not move scripts just for cosmetic reasons.
+
+Moving scripts in Arma Reforger Workbench can break references, prefabs or dependencies if done too quickly.
+
+The current structure is valid and should remain stable unless a future system becomes too large or difficult to maintain.
+
+Code cleanup should focus first on:
+
+* safer defaults;
+* clearer component setup;
+* better validation warnings;
+* reduced debug spam;
+* dedicated server performance;
+* documentation of where each component belongs;
+* avoiding unnecessary scans;
+* avoiding duplicated `CallLater` loops;
+* keeping optional systems disabled when not used.
+
+Folder cleanup and code refactor must be separate tasks.
+
+---
+
+## Actions folder
+
+Official folder:
 
 ```text
 scripts/Game/TFR/Actions/
@@ -59,69 +67,134 @@ scripts/Game/TFR/Actions/
 
 Purpose:
 
-User actions attached to entities through an ActionManagerComponent.
+This folder contains user actions attached to entities through an `ActionManagerComponent`.
 
-Current related scripts:
+Actions should be small and should not contain heavy mission logic directly.
+
+Current action scripts:
 
 ```text
-TFR_Action_Arrestar
-TFR_Action_Identificar
-TFR_Action_Interrogar
-TFR_HaloJumpUserAction
-TFR_MissionAdminActions
-TFR_MissionSettingAction
+TFR_Action_Arrestar.c
+TFR_Action_Identificar.c
+TFR_Action_Interrogar.c
+TFR_HaloJumpUserAction.c
+TFR_MissionAdminActions.c
+TFR_MissionSettingAction.c
 ```
 
-Rules:
+### Current responsibilities
 
-* Actions should stay lightweight.
-* Actions should not contain heavy mission logic.
-* Actions should call components or managers.
-* Actions should have clear names in Workbench.
-* Actions should provide useful cannot-perform reasons when possible.
+`TFR_Action_Identificar.c`
+
+Identifies civilians or mission targets.
+
+It depends mainly on:
+
+```text
+TFR_CivilDataComponent
+```
+
+It is part of the identification/arrest/interrogation flow.
 
 ---
 
-## Admin
+`TFR_Action_Interrogar.c`
 
-Target folder:
+Allows the player to interrogate an entity.
 
-```text
-scripts/Game/TFR/Admin/
-```
-
-Purpose:
-
-Admin access, admin consoles, diagnostics and safe server-side admin actions.
-
-Current related scripts:
+It depends mainly on:
 
 ```text
-TFR_MissionAdminConsoleComponent
-TFR_MissionAdminActions
-TFR_MissionSettingAction
+TFR_InteractionComponent
 ```
 
-Possible future scripts:
-
-```text
-TFR_AdminPermissionsComponent
-TFR_AdminDiagnosticsComponent
-TFR_AdminActionHelpers
-```
-
-Rules:
-
-* Admin systems must validate permissions.
-* Admin systems must avoid client-side sensitive execution.
-* Admin systems should print useful diagnostics.
-* Admin systems should not spam logs during normal gameplay.
+The action itself should stay lightweight.
+The interrogation logic belongs in the interaction component and mission systems.
 
 ---
 
-## Components
+`TFR_Action_Arrestar.c`
 
-Target folder:
+Allows a suspect or target to be arrested or forced into surrender flow.
+
+It depends on:
+
+```text
+TFR_CivilDataComponent
+TFR_SurrenderControlComponent
+TFR_MissionManagerComponent
+SCR_CharacterControllerComponent
+```
+
+It connects the arrest action with mission completion logic.
+
+---
+
+`TFR_HaloJumpUserAction.c`
+
+Allows a player to request HALO insertion through a user action.
+
+It belongs in `Actions/` even though it is related to HALO, because it is still a user action.
+
+It should call HALO components instead of containing the full HALO system itself.
+
+---
+
+`TFR_MissionAdminActions.c`
+
+Contains admin actions for mission control.
+
+These actions are intended for radios, terminals, admin consoles or similar objects.
+
+They should call admin components or mission manager APIs instead of modifying mission state directly.
+
+---
+
+`TFR_MissionSettingAction.c`
+
+Contains admin actions for persistence control.
+
+Examples:
+
+* save operation;
+* load operation;
+* reset operation persistence;
+* reset player inventory persistence;
+* reset vehicle cargo persistence;
+* reset all persistence;
+* print persistence state.
+
+These actions depend on:
+
+```text
+TFR_PersistenceManagerComponent
+```
+
+### Rules for actions
+
+Actions should:
+
+* stay lightweight;
+* call components/managers for real logic;
+* avoid duplicated logic;
+* avoid heavy scans;
+* avoid persistent loops;
+* avoid debug spam;
+* provide useful feedback when possible;
+* be easy to understand in Workbench.
+
+Actions should not:
+
+* own mission state;
+* own persistence state;
+* run expensive systems;
+* bypass server validation for sensitive actions.
+
+---
+
+## Components folder
+
+Official folder:
 
 ```text
 scripts/Game/TFR/Components/
@@ -129,99 +202,322 @@ scripts/Game/TFR/Components/
 
 Purpose:
 
-General reusable components that do not clearly belong to a more specific folder.
+This folder contains the main gameplay components of the addon.
 
-Current related scripts:
+Some components go on GameMode.
+Some go on player characters.
+Some go on NPCs or mission entities.
+Some go on physical objects like radios or consoles.
+
+Current component scripts:
 
 ```text
-TFR_CivilDataComponent
-TFR_InteractionComponent
-TFR_MoodComponent
-TFR_SurrenderControlComponent
-TFR_ArtilleryImpactComponent
+TFR_ArtilleryImpactComponent.c
+TFR_CivilDataComponent.c
+TFR_EnemyCommsManagerComponent.c
+TFR_HaloJumpComponent.c
+TFR_HaloMapSelectionComponent.c
+TFR_InteractionComponent.c
+TFR_MissionAdminConsoleComponent.c
+TFR_MoodComponent.c
+TFR_PersistenceManagerComponent.c
+TFR_PlayerInventoryPersistenceComponent.c
+TFR_SurrenderControlComponent.c
 ```
 
-Rules:
+This folder is intentionally broad.
 
-* Component purpose must be clear.
-* Component placement must be documented.
-* Optional components should be disabled when unused.
-* Debug should be disabled by default.
-* Component names should be clear in Workbench.
+At the moment, it is better to keep these systems together than to split them into too many folders.
 
 ---
 
-## Core
+## GameMode components
 
-Target folder:
-
-```text
-scripts/Game/TFR/Core/
-```
-
-Purpose:
-
-Shared framework base, common helpers, validation, logging and global utility logic.
-
-Current state:
-
-No dedicated core layer has been separated yet.
-
-Possible future scripts:
+The following components are intended to live on the GameMode or on GameMode-related entities:
 
 ```text
-TFR_Log
-TFR_Validation
-TFR_GameModeHelper
-TFR_ComponentHelper
-TFR_ServerHelper
-TFR_PositionHelper
+TFR_EnemyCommsManagerComponent.c
+TFR_HaloJumpComponent.c
+TFR_PersistenceManagerComponent.c
+TFR_PlayerInventoryPersistenceComponent.c
 ```
 
-Rules:
+Also related GameMode systems exist in other folders:
 
-* Core should not depend on mission-specific systems when possible.
-* Core should provide reusable helpers.
-* Core should reduce duplicated code.
-* Core should avoid becoming a dumping ground.
+```text
+TFR_MissionManagerComponent.c
+TFR_JournalTaskBridgeComponent.c
+TFR_OperationsRadialGameModeComponent.c
+TFR_SpawnDirectorComponent.c
+```
+
+### GameMode component rules
+
+GameMode components should:
+
+* be server-safe;
+* validate their settings;
+* use safe defaults;
+* avoid debug spam;
+* clean `CallLater` calls in `OnDelete`;
+* avoid expensive loops when disabled;
+* explain missing setup through useful warnings;
+* be documented clearly.
+
+GameMode components are the most important for setup.
+
+A mission maker should not have to guess which components belong on the GameMode.
 
 ---
 
-## HALO
+## Player / character components
 
-Target folder:
-
-```text
-scripts/Game/TFR/HALO/
-```
-
-Purpose:
-
-HALO insertion systems.
-
-Current related scripts:
+The following components are intended for player characters or controlled entities:
 
 ```text
-TFR_HaloJumpComponent
-TFR_HaloMapSelectionComponent
-TFR_HaloSpawnPointComponent
-TFR_HaloJumpUserAction
+TFR_HaloMapSelectionComponent.c
 ```
 
-Rules:
+Related radial player component:
 
-* HALO server execution must stay server-safe.
-* Map selection belongs to client/player flow.
-* Actual jump execution must be validated by server.
-* No heavy loops.
-* Retry flows must stay limited.
-* Dedicated server behaviour must remain tested.
+```text
+TFR_OperationsRadialComponent.c
+```
+
+The radial network component is recommended on PlayerController, but can be tolerated on the controlled character when needed:
+
+```text
+TFR_OperationsRadialNetworkComponent.c
+```
+
+### Player component rules
+
+Player components should:
+
+* avoid running on dedicated server when they are UI-only;
+* avoid sensitive server logic on the client;
+* use RPC/server validation when needed;
+* clean input listeners and callbacks;
+* avoid repeated client-side spam;
+* provide clear local hints.
 
 ---
 
-## Missions
+## NPC / civilian components
 
-Target folder:
+The following components are intended for NPCs, civilians, informants, suspects or mission targets:
+
+```text
+TFR_CivilDataComponent.c
+TFR_InteractionComponent.c
+TFR_MoodComponent.c
+TFR_SurrenderControlComponent.c
+```
+
+### Current responsibilities
+
+`TFR_CivilDataComponent.c`
+
+Stores civil/target data such as:
+
+* enabled state;
+* arrest order;
+* identified state;
+* surrender permission.
+
+Used by:
+
+```text
+TFR_Action_Identificar
+TFR_Action_Arrestar
+```
+
+---
+
+`TFR_InteractionComponent.c`
+
+Handles interrogation logic.
+
+It can:
+
+* provide intel;
+* mark itself as consumed;
+* trigger betrayal;
+* call mission manager;
+* start hunt waves through mission manager.
+
+Used by:
+
+```text
+TFR_Action_Interrogar
+TFR_MissionManagerComponent
+```
+
+---
+
+`TFR_MoodComponent.c`
+
+Handles civilian mood and aggression.
+
+It can move an NPC between:
+
+```text
+CALM
+NERVOUS
+SCARED
+AGGRESSIVE
+```
+
+It can also:
+
+* change real faction;
+* activate hostile lock;
+* start scavenger behaviour;
+* force aggression from enemy communications.
+
+This component is performance-sensitive and must be reviewed carefully.
+
+---
+
+`TFR_SurrenderControlComponent.c`
+
+Small component that tracks whether the entity can surrender.
+
+Used by:
+
+```text
+TFR_Action_Arrestar
+```
+
+### NPC component rules
+
+NPC components should:
+
+* be optional when possible;
+* use safe defaults;
+* avoid heavy loops per NPC;
+* avoid debug spam;
+* avoid world scans unless clearly limited;
+* document what prefab/entity they belong to.
+
+---
+
+## Physical object / admin components
+
+The following component is intended for physical admin objects such as radios, laptops, terminals, boxes or consoles:
+
+```text
+TFR_MissionAdminConsoleComponent.c
+```
+
+It controls access to mission admin actions.
+
+It should be used together with action scripts in an `ActionManagerComponent`.
+
+### Admin object rules
+
+Admin objects should:
+
+* validate faction or permission;
+* avoid client-side sensitive execution;
+* call mission manager or persistence manager APIs;
+* provide useful logs only when needed;
+* stay optional.
+
+---
+
+## HALO components inside current structure
+
+HALO scripts currently live in different folders depending on their type:
+
+```text
+scripts/Game/TFR/Components/TFR_HaloJumpComponent.c
+scripts/Game/TFR/Components/TFR_HaloMapSelectionComponent.c
+scripts/Game/TFR/Spawn/TFR_HaloSpawnPointComponent.c
+scripts/Game/TFR/Actions/TFR_HaloJumpUserAction.c
+```
+
+This is accepted.
+
+They should not be moved just because they are all HALO-related.
+
+The current placement makes sense:
+
+* HALO action stays in `Actions/`;
+* HALO manager and map selection stay in `Components/`;
+* HALO spawn point stays in `Spawn/`.
+
+### HALO rules
+
+HALO systems should:
+
+* keep actual jump execution server-side;
+* allow client map selection only as a request flow;
+* validate positions on server;
+* avoid heavy loops;
+* keep retry systems limited;
+* clean `CallLater` calls;
+* work on dedicated server.
+
+---
+
+## Persistence components inside current structure
+
+Persistence scripts currently live in:
+
+```text
+scripts/Game/TFR/Components/TFR_PersistenceManagerComponent.c
+scripts/Game/TFR/Components/TFR_PlayerInventoryPersistenceComponent.c
+scripts/Game/TFR/Actions/TFR_MissionSettingAction.c
+```
+
+This is accepted.
+
+They should not be moved for now.
+
+### Persistence responsibilities
+
+`TFR_PersistenceManagerComponent.c`
+
+Handles operation persistence:
+
+* operation state;
+* intel chain state;
+* active mission state;
+* save/load;
+* admin resets;
+* restore hooks through MissionManager.
+
+---
+
+`TFR_PlayerInventoryPersistenceComponent.c`
+
+Handles player inventory persistence:
+
+* scans player inventories;
+* saves player inventory JSON;
+* restores inventory storage slot items;
+* avoids duplicate prefab counts;
+* blocks autosave while restore is pending;
+* avoids overwriting valid saves with invalid empty player states.
+
+### Persistence rules
+
+Persistence must:
+
+* run server-side by default;
+* use safe autosave intervals;
+* avoid overwriting valid saves with empty data;
+* avoid heavy scans;
+* keep restore retry limits;
+* provide admin diagnostics;
+* avoid debug spam in normal gameplay.
+
+---
+
+## Missions folder
+
+Official folder:
 
 ```text
 scripts/Game/TFR/Missions/
@@ -229,70 +525,73 @@ scripts/Game/TFR/Missions/
 
 Purpose:
 
-Dynamic operation flow, intel chains, mission types, rewards and journal bridge.
+This folder contains the dynamic operation and mission flow.
 
-Current related scripts:
+Current mission scripts:
 
 ```text
-TFR_MissionManagerComponent
-TFR_JournalTaskBridgeComponent
-TFR_InteractionComponent
-TFR_CivilDataComponent
-TFR_MoodComponent
+TFR_JournalTaskBridgeComponent.c
+TFR_MissionManagerComponent.c
 ```
 
-Rules:
+### Current responsibilities
 
-* Mission logic should stay server-side where needed.
-* MissionManager should be reviewed carefully because it is the largest system.
-* Journal updates should stay isolated through the journal bridge.
-* Mission state should be clear for persistence.
-* Mission systems should not require users to guess setup.
+`TFR_MissionManagerComponent.c`
+
+Main system for operations and missions.
+
+It currently handles:
+
+* Operation Lite;
+* intel chains;
+* informant jobs;
+* patrol jobs;
+* main mission creation;
+* mission types;
+* convoy mission logic;
+* rewards;
+* reinforcement waves;
+* betrayal/hunt waves;
+* admin recovery;
+* restore hooks for persistence;
+* communication with journal bridge.
+
+This is currently one of the largest and most important scripts in the addon.
 
 ---
 
-## Persistence
+`TFR_JournalTaskBridgeComponent.c`
 
-Target folder:
+Bridge between TFR missions and Scenario Framework task/journal systems.
 
-```text
-scripts/Game/TFR/Persistence/
-```
+It updates the main task/journal state for:
 
-Purpose:
+* intel spawned;
+* intel received;
+* mission created;
+* mission updated;
+* mission completed;
+* mission failed;
+* admin reset.
 
-Operation persistence, player inventory persistence and future vehicle cargo persistence.
+### Mission rules
 
-Current related scripts:
+Mission scripts should:
 
-```text
-TFR_PersistenceManagerComponent
-TFR_PlayerInventoryPersistenceComponent
-TFR_MissionSettingAction
-```
+* run server-side where needed;
+* keep mission state clear;
+* expose safe public APIs for actions/admin/persistence;
+* avoid direct UI dependencies where possible;
+* use the journal bridge for task updates;
+* avoid becoming impossible to configure.
 
-Possible future scripts:
-
-```text
-TFR_VehicleCargoPersistenceComponent
-TFR_PersistencePaths
-TFR_PersistenceDiagnostics
-```
-
-Rules:
-
-* Persistence must be server-friendly.
-* Autosave intervals must be safe.
-* Empty player states must not overwrite valid saves.
-* Restore retries must be controlled.
-* Save files must be clearly separated.
-* Admin reset functions must be safe.
+The MissionManager should be reviewed carefully during cleanup, but it should not be moved just for folder cosmetics.
 
 ---
 
-## Radial
+## Radial folder
 
-Target folder:
+Official folder:
 
 ```text
 scripts/Game/TFR/Radial/
@@ -300,37 +599,111 @@ scripts/Game/TFR/Radial/
 
 Purpose:
 
-Dedicated TFR Operations radial menu and radial network actions.
+This folder contains the dedicated TFR radial menu system.
 
-Current related scripts:
+Current radial scripts:
 
 ```text
-TFR_OperationsRadialMenu
-TFR_OperationsRadialController
-TFR_OperationsRadialGameModeComponent
-TFR_OperationsRadialComponent
-TFR_OperationsRadialEntry
-TFR_OperationsRadialNetworkComponent
+TFR_OperationsRadialComponent.c
+TFR_OperationsRadialController.c
+TFR_OperationsRadialEntry.c
+TFR_OperationsRadialGameModeComponent.c
+TFR_OperationsRadialMenu.c
+TFR_OperationsRadialNetworkComponent.c
 ```
 
-Rules:
+### Current responsibilities
 
-* The TFR radial should not use the global vanilla radial menu.
-* Sensitive actions must go through server validation.
-* Client UI must not run on dedicated server.
-* Input registration must be cleaned up.
-* Radial entries should only expose implemented systems.
+`TFR_OperationsRadialMenu.c`
 
-Known review point:
+Dedicated TFR radial menu.
 
-Player inventory radial entries are declared but must be checked against the network implementation.
-They should either be implemented fully or hidden until ready.
+It does not use the global vanilla radial menu.
 
 ---
 
-## Spawn
+`TFR_OperationsRadialController.c`
 
-Target folder:
+Controls radial opening/closing and input handling.
+
+It handles:
+
+* input registration;
+* analog value filtering;
+* toggle open/close;
+* avoiding double opening;
+* listener cleanup.
+
+---
+
+`TFR_OperationsRadialGameModeComponent.c`
+
+GameMode component that registers the dedicated radial menu on clients.
+
+It avoids UI registration on dedicated server.
+
+---
+
+`TFR_OperationsRadialComponent.c`
+
+Player/character component that controls and fills the radial menu.
+
+It creates entries for:
+
+* HALO;
+* mission admin;
+* persistence admin.
+
+---
+
+`TFR_OperationsRadialEntry.c`
+
+Defines radial entries and sends actions.
+
+HALO opens the local map selection flow.
+Mission and persistence actions go through the network component.
+
+---
+
+`TFR_OperationsRadialNetworkComponent.c`
+
+Network bridge for radial actions.
+
+It validates the request on server and calls:
+
+```text
+TFR_MissionManagerComponent
+TFR_PersistenceManagerComponent
+```
+
+### Known radial review point
+
+`TFR_OperationsRadialEntry.c` declares player inventory radial entries.
+
+These should be checked.
+
+They should either be:
+
+* fully implemented through the network component; or
+* hidden/removed until ready.
+
+### Radial rules
+
+Radial scripts should:
+
+* keep UI client-side;
+* avoid UI work on dedicated server;
+* route sensitive actions through server validation;
+* avoid duplicate input listeners;
+* clean callbacks;
+* expose only working entries;
+* avoid debug spam.
+
+---
+
+## Spawn folder
+
+Official folder:
 
 ```text
 scripts/Game/TFR/Spawn/
@@ -338,188 +711,272 @@ scripts/Game/TFR/Spawn/
 
 Purpose:
 
-Spawn areas, spawn director, safe placement and map-independent placement systems.
+This folder contains map-independent placement and spawn systems.
 
-Current related scripts:
+Current spawn scripts:
 
 ```text
-TFR_SpawnAreaComponent
-TFR_SpawnDirectorComponent
-TFR_HaloSpawnPointComponent
+TFR_HaloSpawnPointComponent.c
+TFR_SpawnAreaComponent.c
+TFR_SpawnDirectorComponent.c
 ```
 
-Rules:
+### Current responsibilities
 
-* The addon must remain map-independent.
-* Areas should be configured through placed components.
-* No continuous scans unless required.
-* Spawn logic must avoid unsafe positions where possible.
-* SpawnDirector must stay server-friendly.
-* Persistent patrol checks must be limited.
+`TFR_HaloSpawnPointComponent.c`
+
+Physical HALO insertion point.
+
+It:
+
+* registers active HALO points;
+* supports priority;
+* has no loops;
+* does not spawn anything directly.
 
 ---
 
-## Utilities
+`TFR_SpawnAreaComponent.c`
 
-Target folder:
+Map-independent area marker.
+
+It marks usable areas with:
+
+* area type;
+* radius;
+* enabled state;
+* optional area name.
+
+Supported area types:
 
 ```text
-scripts/Game/TFR/Utilities/
+ANY
+TOWN
+MILITARY
+INDUSTRIAL
+ROAD
+CHECKPOINT
+BASE
+COMPOUND
 ```
 
-Purpose:
-
-Small reusable helpers that are not tied to one gameplay system.
-
-Possible future scripts:
-
-```text
-TFR_ArrayUtils
-TFR_FactionUtils
-TFR_EntityUtils
-TFR_InventoryUtils
-TFR_GridUtils
-TFR_RandomUtils
-```
-
-Rules:
-
-* Utility scripts should be small.
-* Utility scripts should avoid hidden side effects.
-* Utility scripts should not hold mission state.
-* Utility scripts should be reusable across systems.
+The entity name is not the most important part.
+The important setup values are the area type, radius and enabled state.
 
 ---
 
-## Suggested move order
+`TFR_SpawnDirectorComponent.c`
 
-To reduce risk, move scripts in this order:
+Director for modular spawns by area.
 
-### Step 1 — Actions
+It can handle:
 
-Move action scripts first because they are mostly isolated.
+* group spawn rules;
+* vehicle spawn rules;
+* prefab pools;
+* crew spawning;
+* waypoints;
+* patrol modes;
+* persistent vehicle patrols;
+* patrol respawn;
+* route refresh.
 
-```text
-TFR_Action_Arrestar
-TFR_Action_Identificar
-TFR_Action_Interrogar
-TFR_HaloJumpUserAction
-TFR_MissionAdminActions
-TFR_MissionSettingAction
-```
+This script is powerful and performance-sensitive.
 
-Compile after this step.
+### Spawn rules
 
----
+Spawn scripts should:
 
-### Step 2 — Radial
-
-Move radial scripts next.
-
-```text
-TFR_OperationsRadialMenu
-TFR_OperationsRadialController
-TFR_OperationsRadialGameModeComponent
-TFR_OperationsRadialComponent
-TFR_OperationsRadialEntry
-TFR_OperationsRadialNetworkComponent
-```
-
-Compile and test radial opening after this step.
+* remain map-independent;
+* use placed area components instead of hardcoded positions;
+* avoid continuous scans;
+* run server-side where needed;
+* keep patrol checks limited;
+* avoid unsafe spawn positions where possible;
+* avoid debug spam;
+* clean spawned/persistent entities when needed.
 
 ---
 
-### Step 3 — Spawn
+## Current folder decision
 
-Move spawn-related scripts.
+The current folder structure is official and accepted:
 
 ```text
-TFR_SpawnAreaComponent
-TFR_SpawnDirectorComponent
-TFR_HaloSpawnPointComponent
+scripts/Game/TFR/
+├─ Actions/
+├─ Components/
+├─ Missions/
+├─ Radial/
+└─ Spawn/
 ```
 
-Compile and check that spawn areas still register.
+We are not creating these folders for now:
+
+```text
+Admin/
+Core/
+HALO/
+Persistence/
+Utilities/
+```
+
+They may be added in the future only if there is a real need.
+
+Examples of when a new folder may become justified:
+
+* a system becomes too large;
+* many shared helpers appear;
+* persistence grows into several independent files;
+* admin systems become complex;
+* HALO grows beyond the current simple set;
+* utilities become reusable across many systems.
+
+Until then, keeping the structure simple is better.
 
 ---
 
-### Step 4 — HALO
+## Cleanup priority without moving files
 
-Move HALO logic.
+Since the current folder structure is accepted, the next cleanup work should focus on behaviour and setup quality.
 
-```text
-TFR_HaloJumpComponent
-TFR_HaloMapSelectionComponent
-TFR_HaloJumpUserAction
-TFR_HaloSpawnPointComponent
-```
+Priority areas:
 
-Compile and test HALO map selection.
+### 1. Component placement documentation
 
-Note:
+Document where each component belongs:
 
-If `TFR_HaloJumpUserAction` or `TFR_HaloSpawnPointComponent` were already moved in previous steps, do not duplicate them.
-
----
-
-### Step 5 — Persistence
-
-Move persistence systems.
-
-```text
-TFR_PersistenceManagerComponent
-TFR_PlayerInventoryPersistenceComponent
-TFR_MissionSettingAction
-```
-
-Compile and test admin persistence actions after this step.
+* GameMode;
+* player character;
+* PlayerController;
+* NPC/civilian;
+* physical object;
+* world marker.
 
 ---
 
-### Step 6 — Missions
+### 2. Safe defaults
 
-Move mission systems last because they have the most dependencies.
+Review attributes and defaults.
 
-```text
-TFR_MissionManagerComponent
-TFR_JournalTaskBridgeComponent
-TFR_InteractionComponent
-TFR_CivilDataComponent
-TFR_MoodComponent
-TFR_SurrenderControlComponent
-TFR_MissionAdminConsoleComponent
-```
+Important examples:
 
-Compile and test mission startup after this step.
+* debug should be disabled by default;
+* optional systems should be disabled if not required;
+* scan intervals should be safe;
+* autosave intervals should be safe;
+* max counts should have limits.
 
 ---
 
-## Do not do this yet
+### 3. Validation warnings
 
-Do not rename classes yet.
+Add clear warnings when setup is incomplete.
 
-Do not rewrite logic while moving files.
+Warnings should explain exactly what is missing.
 
-Do not change attributes while moving files.
+Bad warning:
 
-Do not change GameMode setup while moving files.
+```text
+Error.
+```
 
-Do not optimize systems during the folder move.
+Good warning:
 
-The first goal is only to make the file structure clearer without changing behaviour.
+```text
+TFR_MissionManagerComponent: Intel Civil Prefab is empty. Informant intel jobs cannot spawn.
+```
+
+---
+
+### 4. Dedicated server safety
+
+Review:
+
+* `System.IsConsoleApp()`;
+* `Replication.IsServer()`;
+* `Run Server Only`;
+* client UI guards;
+* server-only mission logic;
+* cleanup in `OnDelete`.
+
+---
+
+### 5. Performance safety
+
+Review:
+
+* `CallLater` loops;
+* repeated timers;
+* world scans;
+* `QueryEntitiesByAABB`;
+* autosave intervals;
+* mood ticks;
+* enemy comms scans;
+* persistent patrol checks;
+* debug logs.
+
+---
+
+### 6. Documentation and setup checklist
+
+The final setup must be clear enough that a mission maker can use the addon without knowing the internal code.
+
+The documentation should eventually explain:
+
+* minimum setup;
+* full setup;
+* required GameMode components;
+* optional components;
+* player prefab requirements;
+* NPC prefab requirements;
+* admin console setup;
+* radial setup;
+* spawn area setup;
+* persistence setup;
+* performance limits.
+
+---
+
+## Do not do this now
+
+Do not rename classes.
+
+Do not move scripts.
+
+Do not split MissionManager yet.
+
+Do not split SpawnDirector yet.
+
+Do not rewrite persistence yet.
+
+Do not change prefab setup while also changing code.
+
+Do not optimize everything at once.
+
+Each cleanup step should be isolated and tested.
 
 ---
 
 ## Final goal
 
-The final goal of the folder structure cleanup is that a developer or mission maker can open the addon and immediately understand where each system belongs.
-
-The structure should support the four roadmap fronts:
+The current structure should support the four roadmap fronts:
 
 1. Safe Position / Safe Placement
 2. Mission system for mission makers
 3. Stable persistence
 4. Simplification, cleanup and optimization
 
-Each folder should make the addon easier to configure, easier to debug and safer for dedicated servers.
+The addon should remain:
 
+* map-independent;
+* modular;
+* clear in Workbench;
+* difficult to break;
+* lightweight on dedicated servers;
+* understandable for mission makers;
+* stable enough for long operations.
+
+The current folder structure is good enough to continue development.
+
+The next work should focus on making each existing system safer, clearer and better documented.
