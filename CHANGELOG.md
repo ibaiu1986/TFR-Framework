@@ -14,9 +14,24 @@ All notable changes to TFR Framework will be documented in this file.
 - Setup documentation.
 - Components documentation.
 - Performance guidelines.
+- Internal `TFR_SurrenderBridge` fallback for future optional ACE compatibility.
+- Internal `TFR_ParachuteBridge` fallback for future optional Parachute Framework compatibility.
+
+### Changed
+
+- Removed the direct ACE surrender call from the core arrest action.
+- Updated TFR radial controller compatibility for the current Workbench callback/API behaviour.
+- Updated TFR radial component controller-changed callback compatibility.
+
+### Fixed
+
+- Fixed core arrest action dependency on `RPC_ACE_ForceSurrender`.
+- Fixed radial compilation errors caused by changed radial callback signatures.
 
 ### Planned
 
+- Modular dependency compatibility layer for ACE systems.
+- Modular dependency compatibility layer for Parachute Framework systems.
 - Safe position / safe placement systems.
 - Mission systems for TFR Operations.
 - Stable persistence systems.
