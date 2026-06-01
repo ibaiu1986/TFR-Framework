@@ -20,12 +20,15 @@ All notable changes to TFR Framework will be documented in this file.
 ### Changed
 
 - Removed the direct ACE surrender call from the core arrest action.
+- Removed direct Parachute Framework references from the core HALO component.
+- Updated HALO core to use `TFR_ParachuteBridge` fallback for external parachute checks and auto deploy.
 - Updated TFR radial controller compatibility for the current Workbench callback/API behaviour.
 - Updated TFR radial component controller-changed callback compatibility.
 
 ### Fixed
 
 - Fixed core arrest action dependency on `RPC_ACE_ForceSurrender`.
+- Fixed core HALO dependency on `ParachuteComponent` and `ParachuteItemComponent`.
 - Fixed radial compilation errors caused by changed radial callback signatures.
 
 ### Planned
