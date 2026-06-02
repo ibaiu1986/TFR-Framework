@@ -14,13 +14,16 @@
 // - En servidor dedicado el personaje puede inicializar antes de que el GameMode registre
 //   TFR_OperationsRadialMenu en el cliente.
 // - Reintenta tomar control hasta que el menú dedicado exista.
-// - Imprime BOOT antes de cortar por System.IsConsoleApp() para comprobar desde log servidor
-//   si el prefab real del jugador lleva este componente.
 //
 // COMPAT FIX:
 // - GetOnControllerChanged() usa ScriptInvoker_RadialMenuEventMethod.
 // - La firma compatible es OnControllerChanged(SCR_RadialMenu radialMenu).
 // - No se elimina funcionalidad.
+//
+// SERVER POLISH:
+// - El antiguo BOOT SERVERCHECK deja de imprimirse siempre.
+// - Debug Logs controla los mensajes normales.
+// - Los warnings importantes siguen visibles.
 //------------------------------------------------------------------------------------------------
 
 [ComponentEditorProps(category: "TFR Operations/Radial", description: "Controls the TFR Operations radial menu.")]
@@ -68,10 +71,10 @@ class TFR_OperationsRadialComponent : ScriptComponent
 	{
 		super.OnPostInit(owner);
 
-		Print("[TFR Operations Radial BOOT SERVERCHECK] Character radial component reached. IsConsoleApp=" + System.IsConsoleApp().ToString() + " Owner=" + owner.ToString(), LogLevel.NORMAL);
-
 		m_Owner = owner;
 		m_iControlRetryCount = 0;
+
+		TFR_DebugLog("Character radial component reached. IsConsoleApp=" + System.IsConsoleApp().ToString() + " Owner=" + owner.ToString());
 
 		if (!m_bEnabled)
 			return;
