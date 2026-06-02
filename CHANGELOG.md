@@ -24,6 +24,8 @@ All notable changes to TFR Framework will be documented in this file.
 - Updated HALO core to use `TFR_ParachuteBridge` fallback for external parachute checks and auto deploy.
 - Updated TFR radial controller compatibility for the current Workbench callback/API behaviour.
 - Updated TFR radial component controller-changed callback compatibility.
+- Disabled artillery impact debug logs by default.
+- Disabled player inventory persistence debug logs by default while keeping admin diagnostics visible.
 
 ### Fixed
 
