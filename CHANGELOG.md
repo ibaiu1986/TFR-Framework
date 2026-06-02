@@ -26,6 +26,7 @@ All notable changes to TFR Framework will be documented in this file.
 - Updated TFR radial component controller-changed callback compatibility.
 - Disabled artillery impact debug logs by default.
 - Disabled player inventory persistence debug logs by default while keeping admin diagnostics visible.
+- Reduced TFR radial boot log spam by moving normal boot messages behind debug logging.
 
 ### Fixed
 
