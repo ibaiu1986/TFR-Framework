@@ -24,11 +24,21 @@
 // FIX COMPAT:
 // - InvokeOnInputOpen() ya no recibe parámetros.
 // - No se usan const class fields para evitar errores "Broken expression" en Workbench.
+//
+// SERVER POLISH:
+// - Los logs normales de registro/control pasan a Debug Logs.
+// - Los warnings importantes siguen visibles.
+// - No cambia la lógica del radial.
+// - No cambia bindings.
+// - No cambia toggle.
 //------------------------------------------------------------------------------------------------
 
 [BaseContainerProps()]
 class TFR_OperationsRadialController : SCR_RadialMenuController
 {
+	[Attribute("false", UIWidgets.CheckBox, "Debug Logs")]
+	protected bool m_bDebugLogs;
+
 	protected bool m_bTFRInputRegistered;
 	protected bool m_bTFRInputLocked;
 	protected bool m_bTFRInputHeld;
@@ -114,7 +124,7 @@ class TFR_OperationsRadialController : SCR_RadialMenuController
 
 		m_bTFRInputRegistered = true;
 
-		Print("[TFR Operations Radial] Input listener registered: " + m_sTFRRegisteredOpenAction, LogLevel.NORMAL);
+		TFR_DebugLog("Input listener registered: " + m_sTFRRegisteredOpenAction);
 	}
 
 	//------------------------------------------------------------------------------------------------
@@ -158,7 +168,7 @@ class TFR_OperationsRadialController : SCR_RadialMenuController
 				);
 			}
 
-			Print("[TFR Operations Radial] Input listener removed: " + m_sTFRRegisteredOpenAction, LogLevel.NORMAL);
+			TFR_DebugLog("Input listener removed: " + m_sTFRRegisteredOpenAction);
 		}
 
 		m_sTFRRegisteredOpenAction = string.Empty;
@@ -310,7 +320,7 @@ class TFR_OperationsRadialController : SCR_RadialMenuController
 
 		ReRegisterTFRInputListener();
 
-		Print("[TFR Operations Radial] Controller took control.", LogLevel.NORMAL);
+		TFR_DebugLog("Controller took control.");
 	}
 
 	//------------------------------------------------------------------------------------------------
@@ -343,5 +353,14 @@ class TFR_OperationsRadialController : SCR_RadialMenuController
 		m_bTFRInputHeld = false;
 		m_bTFRInputLocked = false;
 		m_bTFRInternalOpenRequest = false;
+	}
+
+	//------------------------------------------------------------------------------------------------
+	protected void TFR_DebugLog(string message)
+	{
+		if (!m_bDebugLogs)
+			return;
+
+		Print("[TFR Operations Radial Controller] " + message, LogLevel.NORMAL);
 	}
 }
