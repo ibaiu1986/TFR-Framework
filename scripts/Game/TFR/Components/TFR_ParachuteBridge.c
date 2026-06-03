@@ -9,14 +9,39 @@
 // - No usar ParachuteItemComponent aquí.
 // - Este archivo debe compilar aunque Parachute Framework esté roto o no exista.
 //
-// De momento funciona como fallback seguro.
-// Más adelante, si hacemos addon opcional TFR_Parachute_Compat,
-// ese addon podrá tener su propia lógica con Parachute Framework.
+// OBJETIVO FRENTE 1:
+// - El core TFR no depende de Parachute Framework.
+// - Un addon opcional TFR_Parachute_Compat podrá registrar un provider externo.
+// - Si el provider no existe, el core sigue compilando y funcionando con fallback seguro.
 //------------------------------------------------------------------------------------------------
 
+//------------------------------------------------------------------------------------------------
+class TFR_ParachuteProvider : Managed
+{
+	//------------------------------------------------------------------------------------------------
+	string GetProviderName()
+	{
+		return "Unnamed";
+	}
+
+	//------------------------------------------------------------------------------------------------
+	bool CanHaloJump(SCR_PlayerController playerController, SCR_ChimeraCharacter character, bool requireComponent, bool requireItem)
+	{
+		return false;
+	}
+
+	//------------------------------------------------------------------------------------------------
+	bool RequestAutoDeploy(SCR_PlayerController playerController, SCR_ChimeraCharacter character)
+	{
+		return false;
+	}
+}
+
+//------------------------------------------------------------------------------------------------
 class TFR_ParachuteBridge
 {
 	protected static bool s_bDebugLogs = false;
+	protected static ref TFR_ParachuteProvider s_Provider;
 
 	//------------------------------------------------------------------------------------------------
 	static void SetDebugLogs(bool state)
@@ -25,15 +50,41 @@ class TFR_ParachuteBridge
 	}
 
 	//------------------------------------------------------------------------------------------------
+	static void RegisterProvider(TFR_ParachuteProvider provider)
+	{
+		s_Provider = provider;
+
+		if (s_Provider)
+			TFR_DebugLog("Parachute provider registered: " + s_Provider.GetProviderName());
+		else
+			TFR_DebugLog("Parachute provider cleared through RegisterProvider(null).");
+	}
+
+	//------------------------------------------------------------------------------------------------
+	static void ClearProvider(TFR_ParachuteProvider provider = null)
+	{
+		if (provider && s_Provider != provider)
+			return;
+
+		if (s_Provider)
+			TFR_DebugLog("Parachute provider cleared: " + s_Provider.GetProviderName());
+
+		s_Provider = null;
+	}
+
+	//------------------------------------------------------------------------------------------------
 	static bool HasExternalParachuteProvider()
 	{
-		return false;
+		return s_Provider != null;
 	}
 
 	//------------------------------------------------------------------------------------------------
 	static string GetProviderName()
 	{
-		return "None";
+		if (!s_Provider)
+			return "None";
+
+		return s_Provider.GetProviderName();
 	}
 
 	//------------------------------------------------------------------------------------------------
@@ -51,9 +102,18 @@ class TFR_ParachuteBridge
 		if (!requireComponent && !requireItem)
 			return true;
 
-		TFR_DebugLog("Parachute requirements requested, but no external parachute provider is available.");
+		if (!s_Provider)
+		{
+			TFR_DebugLog("Parachute requirements requested, but no external parachute provider is available.");
+			return false;
+		}
 
-		return false;
+		bool ok = s_Provider.CanHaloJump(playerController, character, requireComponent, requireItem);
+
+		if (!ok)
+			TFR_DebugLog("Parachute provider rejected HALO request: " + s_Provider.GetProviderName());
+
+		return ok;
 	}
 
 	//------------------------------------------------------------------------------------------------
@@ -68,9 +128,18 @@ class TFR_ParachuteBridge
 		if (character.IsDeleted())
 			return false;
 
-		TFR_DebugLog("Auto deploy requested, but no external parachute provider is available.");
+		if (!s_Provider)
+		{
+			TFR_DebugLog("Auto deploy requested, but no external parachute provider is available.");
+			return false;
+		}
 
-		return false;
+		bool ok = s_Provider.RequestAutoDeploy(playerController, character);
+
+		if (!ok)
+			TFR_DebugLog("Parachute provider failed auto deploy request: " + s_Provider.GetProviderName());
+
+		return ok;
 	}
 
 	//------------------------------------------------------------------------------------------------
