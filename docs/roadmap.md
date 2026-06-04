@@ -42,6 +42,8 @@ Planned technical work:
 3. Support infantry-safe and vehicle-safe positions.
 4. Support road-near placement for traffic, convoys and parked vehicles.
 5. Integrate it gradually into HALO, SpawnDirector, MissionManager, AmbientAI and reinforcements.
+6. Add building-interior safe placement validation so units do not spawn inside walls, blocked rooms or invalid floor space.
+7. Add road direction detection so vehicles can align with road heading instead of spawning at random rotation.
 
 ---
 
@@ -126,17 +128,64 @@ Required direction:
 - move normal radial logs behind debug toggles;
 - keep warnings only for real setup problems.
 
-### Marker and area configuration
+### Area based spawn rules and environment scanner
 
-The framework must not require loose GenericEntities with magic names.
+TFR spawning must be based on **areas + rules + environment detection**, not on loose GenericEntities or magic entity names.
 
 Required direction:
 
-- use clear TFR components/prefabs for areas and points;
-- keep entity names non-critical;
-- expand `TFR_SpawnAreaComponent` and add point/route marker components where needed;
-- use a marker/point registry instead of repeated name searches;
-- provide Workbench-friendly prefabs such as area markers, traffic points, reinforcement points and objective points.
+- mission makers place clear TFR area prefabs/components, such as `TFR_Area_Town`, `TFR_Area_Road`, `TFR_Area_Military`, `TFR_Area_Compound` or `TFR_Area_Checkpoint`;
+- each area exposes type, radius, enabled state and optional tags;
+- `TFR_SpawnDirectorComponent` reads area data and applies spawn rules;
+- area rules decide what is allowed inside the area: civilians, patrols, parked vehicles, traffic, QRF, enemies, loot or objectives;
+- the framework scans the actual environment inside the area before spawning anything;
+- entity names are not gameplay logic.
+
+The planned scanner should detect and cache:
+
+- roads;
+- road direction / road heading;
+- road-side positions;
+- road intersections;
+- buildings;
+- building floors;
+- valid building interior points;
+- blocked interior points;
+- doors or likely entrances when detectable;
+- walls / compounds when detectable;
+- signs;
+- utility poles / electric poles;
+- open ground;
+- safe infantry positions;
+- safe vehicle positions;
+- parking-like positions;
+- cover-like urban positions.
+
+Spawn rule examples:
+
+- Civilian rule: prefer building entrances, streets, courtyards and safe interior points.
+- Building garrison rule: use detected floors and interior-safe points, never wall-intersection points.
+- Parked vehicle rule: prefer road-side positions aligned to road heading.
+- Traffic rule: use road direction and avoid cross-road static spawns.
+- Patrol rule: generate patrol points between buildings, roads and open ground within the same area.
+- Enemy/QRF rule: prefer area edges, roads, compounds or military buildings depending on rule type.
+
+This system must cache scan results and avoid heavy continuous scans. Scanning should happen on startup, on demand, or in limited delayed batches.
+
+### Marker and point configuration
+
+Point markers are only for special exact gameplay points, not for general ambient spawning.
+
+Allowed point-marker use cases:
+
+- exact HALO DZ;
+- main base;
+- extraction point;
+- fixed objective point;
+- manually forced reinforcement start;
+- manually forced route point.
+
+General civilians, vehicles, traffic, patrols and ambient systems must use area detection and rules instead.
 
 ### Spawn Director
 
@@ -147,6 +196,9 @@ Required direction:
 - keep rules configurable;
 - use area components, not magic names;
 - add safe-position integration;
+- add area environment scanner integration;
+- use road heading for vehicle spawn orientation;
+- use building floor/interior data for garrison and civilian interior placement;
 - keep spawn limits and server-only defaults;
 - keep persistent patrol checks controlled by `CallLater`, not `EOnFrame`.
 
@@ -158,8 +210,8 @@ Required direction:
 2. Update roadmap/docs with the publicable target and no-loose-GenericEntities rule.
 3. Block A: radial ACE/RHS/vanilla compatibility hardening.
 4. Block B: central Safe Position system.
-5. Block C: point/route marker registry with no loose GenericEntities.
-6. Block D: SpawnDirector integration and presets.
+5. Block C: area environment scanner: roads, road direction, buildings, floors and interior-safe points.
+6. Block D: SpawnDirector integration with area rules and scanner cache.
 7. Block E: objective state and objective persistence.
 8. Block F: AreaObjective, VillageObjective and PoliceStation objective systems.
 9. Block G: Ambient civilians, parked vehicles, armed village vehicles and ambient traffic.
