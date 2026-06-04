@@ -13,7 +13,8 @@ TFR Framework must be a publicable, modular Arma Reforger framework with:
 - Clean dynamic missions.
 - Ordered persistence.
 - **No loose GenericEntities as gameplay configuration.**
-- Clear components for mission makers.
+- **Reduced number of components required from mission makers.**
+- Clear TFR scripted entities/prefabs for mission makers.
 - Controlled logs.
 - Easy GameMode setup.
 
@@ -26,6 +27,7 @@ TFR Framework must be a publicable, modular Arma Reforger framework with:
 - Do not add hard dependencies for optional integrations.
 - Do not use `modded SCR_BaseGameMode` for TFR startup logic.
 - Do not use loose GenericEntities with magic names as required gameplay configuration.
+- Do not force mission makers to manually stack many TFR components on random entities.
 - Existing working TFR scripts are treated as the current good source and must be improved incrementally.
 - New systems must be server-safe, modular and easy to disable.
 
@@ -55,9 +57,10 @@ Planned technical work:
 
 1. Keep `TFR_MissionManagerComponent` as the current mission orchestrator.
 2. Add generic objective state and objective registry systems.
-3. Add reusable area objective components.
+3. Add reusable area objective logic.
 4. Convert special mission concepts such as Police Station and Village Patrol into configurable TFR objective systems.
 5. Connect mission objectives with JournalBridge, rewards, persistence and reinforcements.
+6. Prefer ready-to-place scripted TFR entities/prefabs over requiring mission makers to manually add many components.
 
 ---
 
@@ -85,7 +88,9 @@ Objective: make TFR Framework / TFR Operations easy to configure, difficult to b
 This front includes:
 
 - fewer mandatory components;
+- fewer manually placed components;
 - fewer critical fields spread across different places;
+- prepared scripted entities and prefabs;
 - prepared presets and GameModes;
 - functional example prefabs;
 - separated minimal and full configuration modes;
@@ -93,7 +98,7 @@ This front includes:
 - safe default values;
 - useful validation warnings;
 - logs that explain exactly what is missing;
-- short documentation for each component;
+- short documentation for each TFR entity/prefab;
 - a setup checklist;
 - avoiding strong FPS drops;
 - no unnecessary scans;
@@ -109,7 +114,7 @@ The final goal of Front 4 is that a mission maker should be able to use:
 3. `TFR_GameMode_FullPersistent.et`
 4. `TFR_GameMode_AmbientWarzone.et`
 
-without having to guess which components belong on the GameMode, which ones belong on the character and which ones are optional.
+and place clear TFR entities such as `TFR_Area_Town.et`, `TFR_Area_Road.et`, `TFR_Area_Military.et` or `TFR_Area_Compound.et` without having to guess which components belong on the GameMode, which ones belong on the character and which ones are optional.
 
 ---
 
@@ -130,16 +135,29 @@ Required direction:
 
 ### Area based spawn rules and environment scanner
 
-TFR spawning must be based on **areas + rules + environment detection**, not on loose GenericEntities or magic entity names.
+TFR spawning must be based on **scripted TFR area entities + rules + environment detection**, not on loose GenericEntities, magic entity names or manual component stacking.
 
 Required direction:
 
-- mission makers place clear TFR area prefabs/components, such as `TFR_Area_Town`, `TFR_Area_Road`, `TFR_Area_Military`, `TFR_Area_Compound` or `TFR_Area_Checkpoint`;
-- each area exposes type, radius, enabled state and optional tags;
-- `TFR_SpawnDirectorComponent` reads area data and applies spawn rules;
+- mission makers place ready TFR area entities/prefabs, such as `TFR_Area_Town.et`, `TFR_Area_Road.et`, `TFR_Area_Military.et`, `TFR_Area_Compound.et` or `TFR_Area_Checkpoint.et`;
+- each area entity owns its configuration in script: type, radius, enabled state, optional tags, allowed rule sets and scan settings;
+- mission makers should not need to manually add multiple components to make an area work;
+- internally, the area entity may use one main script class and optional private helper classes, but the Workbench-facing setup must stay simple;
+- `TFR_SpawnDirectorComponent` reads registered TFR area entities and applies spawn rules;
 - area rules decide what is allowed inside the area: civilians, patrols, parked vehicles, traffic, QRF, enemies, loot or objectives;
 - the framework scans the actual environment inside the area before spawning anything;
 - entity names are not gameplay logic.
+
+Planned scripted area classes/prefabs:
+
+- `TFR_AreaEntity` / base scripted area entity;
+- `TFR_Area_Town.et`;
+- `TFR_Area_Road.et`;
+- `TFR_Area_Military.et`;
+- `TFR_Area_Industrial.et`;
+- `TFR_Area_Checkpoint.et`;
+- `TFR_Area_Base.et`;
+- `TFR_Area_Compound.et`.
 
 The planned scanner should detect and cache:
 
@@ -185,7 +203,7 @@ Allowed point-marker use cases:
 - manually forced reinforcement start;
 - manually forced route point.
 
-General civilians, vehicles, traffic, patrols and ambient systems must use area detection and rules instead.
+General civilians, vehicles, traffic, patrols and ambient systems must use scripted TFR area entities, area detection and rules instead.
 
 ### Spawn Director
 
@@ -194,7 +212,8 @@ General civilians, vehicles, traffic, patrols and ambient systems must use area 
 Required direction:
 
 - keep rules configurable;
-- use area components, not magic names;
+- use scripted TFR area entities, not magic names;
+- avoid requiring mission makers to manually attach many components;
 - add safe-position integration;
 - add area environment scanner integration;
 - use road heading for vehicle spawn orientation;
@@ -210,10 +229,11 @@ Required direction:
 2. Update roadmap/docs with the publicable target and no-loose-GenericEntities rule.
 3. Block A: radial ACE/RHS/vanilla compatibility hardening.
 4. Block B: central Safe Position system.
-5. Block C: area environment scanner: roads, road direction, buildings, floors and interior-safe points.
-6. Block D: SpawnDirector integration with area rules and scanner cache.
-7. Block E: objective state and objective persistence.
-8. Block F: AreaObjective, VillageObjective and PoliceStation objective systems.
-9. Block G: Ambient civilians, parked vehicles, armed village vehicles and ambient traffic.
-10. Block H: Reinforcement/QRF manager connected to objectives, EnemyComms and radial/admin tools.
-11. Block I: presets, documentation, setup checklist, performance review and release candidate.
+5. Block C: scripted TFR area entity and area registry.
+6. Block D: area environment scanner: roads, road direction, buildings, floors and interior-safe points.
+7. Block E: SpawnDirector integration with area rules and scanner cache.
+8. Block F: objective state and objective persistence.
+9. Block G: AreaObjective, VillageObjective and PoliceStation objective systems.
+10. Block H: Ambient civilians, parked vehicles, armed village vehicles and ambient traffic.
+11. Block I: Reinforcement/QRF manager connected to objectives, EnemyComms and radial/admin tools.
+12. Block J: presets, documentation, setup checklist, performance review and release candidate.
