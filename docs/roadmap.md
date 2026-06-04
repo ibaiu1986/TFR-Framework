@@ -223,17 +223,21 @@ Required direction:
 
 ---
 
-## Implementation order
+## Definitive implementation order
 
-1. Sync current good TFR scripts into GitHub.
-2. Update roadmap/docs with the publicable target and no-loose-GenericEntities rule.
-3. Block A: radial ACE/RHS/vanilla compatibility hardening.
-4. Block B: central Safe Position system.
-5. Block C: scripted TFR area entity and area registry.
-6. Block D: area environment scanner: roads, road direction, buildings, floors and interior-safe points.
-7. Block E: SpawnDirector integration with area rules and scanner cache.
-8. Block F: objective state and objective persistence.
-9. Block G: AreaObjective, VillageObjective and PoliceStation objective systems.
-10. Block H: Ambient civilians, parked vehicles, armed village vehicles and ambient traffic.
-11. Block I: Reinforcement/QRF manager connected to objectives, EnemyComms and radial/admin tools.
-12. Block J: presets, documentation, setup checklist, performance review and release candidate.
+1. Convert AmbientAI to an area + rules + scanner system.
+2. Harden the TFR radial for ACE/RHS/vanilla compatibility and keep physical-action fallback.
+3. Create the centralized Safe Position system.
+4. Create the base TFR Area Entity and registry for owned TFR areas.
+5. Create the Environment Scanner for roads, road heading, buildings, floors and safe interior points.
+6. Integrate SpawnDirector with areas, scanner, safe position and rules.
+7. Convert Police Station and Village Patrol into configurable TFR objectives.
+8. Add Objective State and objective persistence.
+9. Create a Reinforcement/QRF Manager connected to SpawnDirector, EnemyComms and missions.
+10. Polish Mood/EnemyComms with performance limits.
+11. Prepare TFR-owned prefabs for areas, GameModes, console, HALO and objectives.
+12. Reduce required components and clean up setup for mission makers.
+13. Document minimal setup, full setup and checklist.
+14. Run dedicated-server tests, ACE/RHS/vanilla tests and final optimization.
+15. Re-check and harden the TFR radial again after integration, keeping ACE/RHS/vanilla compatibility and physical-action fallback.
+16. Prepare changelog and release candidate.
