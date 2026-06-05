@@ -102,14 +102,6 @@ class TFR_AreaEntity : GenericEntity
 	}
 
 	//------------------------------------------------------------------------------------------------
-	override void OnDelete(IEntity owner)
-	{
-		UnregisterArea(this);
-
-		super.OnDelete(owner);
-	}
-
-	//------------------------------------------------------------------------------------------------
 	protected void RegisterSelfOnce()
 	{
 		if (m_bRegistered)
